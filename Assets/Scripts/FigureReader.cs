@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -12,12 +11,24 @@ public class FigureReader : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
     void IPointerDownHandler.OnPointerDown(PointerEventData eventData)
     {
+#if !UNITY_EDITOR
+        if (isReading)
+        {
+            return;
+        }
+#endif
         _renderer.positionCount = 0;
         isReading = true;
     }
 
     void IPointerUpHandler.OnPointerUp(PointerEventData eventData)
     {
+#if !UNITY_EDITOR
+        if (Input.touches[0].phase != TouchPhase.Ended)
+        {
+            return;
+        }
+#endif
         isReading = false;
     }
 
@@ -25,9 +36,15 @@ public class FigureReader : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     {
         if (isReading)
         {
-            Vector3 position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
+#if UNITY_EDITOR
+            Vector3 inputPosition = Input.mousePosition;
+#else
+            Vector3 inputPosition = Input.touches[0].position;
+#endif
+            Vector3 position = Camera.main.ScreenToWorldPoint(inputPosition);
             position.z = 0;
-            if (previousPosition != position)
+            if (Vector3.Distance(previousPosition, position) > 0.1f)
             {
                 int index = _renderer.positionCount;
                 _renderer.positionCount++;
