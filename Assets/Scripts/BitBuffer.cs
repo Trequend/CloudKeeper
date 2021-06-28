@@ -8,6 +8,8 @@ public class BitBuffer
 
     public int Height { get; }
 
+    public RectInt Rect { get; }
+
     private readonly bool[] _data;
 
     public BitBuffer(int width, int height)
@@ -25,6 +27,7 @@ public class BitBuffer
         _data = new bool[width * height];
         Width = width;
         Height = height;
+        Rect = new RectInt(0, 0, width, height);
     }
 
     public bool this[int x, int y]

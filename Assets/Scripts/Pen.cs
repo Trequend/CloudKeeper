@@ -22,11 +22,13 @@ public class Pen : ScriptableObject, ISerializationCallbackReceiver
 
         if (!drawArea.Contains(a))
         {
+            Debug.Log(a);
             throw new ArgumentOutOfRangeException(nameof(a));
         }
 
         if (!drawArea.Contains(b))
         {
+            Debug.Log(b);
             throw new ArgumentOutOfRangeException(nameof(b));
         }
 
