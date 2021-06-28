@@ -7,4 +7,14 @@ public class FigureDatabase : ScriptableObject
     public string Id => _id;
 
     [SerializeField] private Figure[] _figures;
+
+    public int GetFiguresCount()
+    {
+        return _figures.Length;
+    }
+
+    public Figure GetFigure(int index)
+    {
+        return _figures[index];
+    }
 }

@@ -73,64 +73,13 @@ public class FigureReader : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
             return;
         }
 
-        if (_points.Count < 2)
-        {
-            _points.Clear();
-            return;
-        }
-
-        Vector2Int minPoint = new Vector2Int(int.MaxValue, int.MaxValue);
-        Vector2Int maxPoint = new Vector2Int(int.MinValue, int.MinValue);
-        foreach (Vector2Int point in _points)
-        {
-            for (int i = 0; i < 2; i++)
-            {
-                if (point[i] < minPoint[i])
-                {
-                    minPoint[i] = point[i];
-                }
-
-                if (point[i] > maxPoint[i])
-                {
-                    maxPoint[i] = point[i];
-                }
-            }
-        }
-
-        Vector2Int size = maxPoint - minPoint;
-        int maxSize = size.x > size.y ? size.x : size.y;
-        Vector2Int center = size / 2 + minPoint;
-        size.Set(maxSize, maxSize);
-        FillFigureBuffer(new RectInt(center - size / 2, size));
+        FillFigureBuffer();
         _points.Clear();
     }
 
-    private void FillFigureBuffer(RectInt pointsBoundingBox)
+    private void FillFigureBuffer()
     {
-        Vector2Int ScreenToFigureBuffer(Vector2Int point)
-        {
-            point -= pointsBoundingBox.min;
-            Vector2 normalized = new Vector2(
-                (float)point.x / pointsBoundingBox.size.x,
-                (float)point.y / pointsBoundingBox.size.y
-            );
-
-            return new Vector2Int(
-                Mathf.RoundToInt(normalized.x * (_figureBuffer.Width - 1)),
-                Mathf.RoundToInt(normalized.y * (_figureBuffer.Height - 1))
-            );
-        }
-
-        for (int i = 0; i < _points.Count - 1; i++)
-        {
-            _bitBufferPen.DrawLine(
-                ScreenToFigureBuffer(_points[i]),
-                ScreenToFigureBuffer(_points[i + 1]),
-                _figureBuffer.SetValue,
-                true,
-                _figureBuffer.Rect
-            );
-        }
+        _figureBuffer.LineLoop(_bitBufferPen, _points);
     }
 
     private IEnumerator Read()

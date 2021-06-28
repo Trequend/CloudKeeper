@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
@@ -51,6 +52,67 @@ public class BitBuffer
         return (Height - 1 - y) * Width + x;
     }
 
+    public void LineLoop(Pen pen, List<Vector2Int> points)
+    {
+        if (points.Count < 2)
+        {
+            return;
+        }
+
+        RectInt pointsBoundingBox = ComputeBoundingBox(points);
+        Vector2Int BoundingBoxToBuffer(Vector2Int point)
+        {
+            point -= pointsBoundingBox.min;
+            Vector2 normalized = new Vector2(
+                (float)point.x / pointsBoundingBox.size.x,
+                (float)point.y / pointsBoundingBox.size.y
+            );
+
+            return new Vector2Int(
+                Mathf.RoundToInt(normalized.x * (Width - 1)),
+                Mathf.RoundToInt(normalized.y * (Height - 1))
+            );
+        }
+
+        for (int i = 0; i < points.Count - 1; i++)
+        {
+            pen.DrawLine(
+                BoundingBoxToBuffer(points[i]),
+                BoundingBoxToBuffer(points[i + 1]),
+                SetValue,
+                true,
+                Rect
+            );
+        }
+    }
+
+    private RectInt ComputeBoundingBox(IEnumerable<Vector2Int> points)
+    {
+        Vector2Int minPoint = new Vector2Int(int.MaxValue, int.MaxValue);
+        Vector2Int maxPoint = new Vector2Int(int.MinValue, int.MinValue);
+        foreach (Vector2Int point in points)
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                if (point[i] < minPoint[i])
+                {
+                    minPoint[i] = point[i];
+                }
+
+                if (point[i] > maxPoint[i])
+                {
+                    maxPoint[i] = point[i];
+                }
+            }
+        }
+
+        Vector2Int size = maxPoint - minPoint;
+        int maxSize = size.x > size.y ? size.x : size.y;
+        Vector2Int center = size / 2 + minPoint;
+        size.Set(maxSize, maxSize);
+        return new RectInt(center - size / 2, size);
+    }
+
     public void Clear()
     {
         int size = Width * Height;
@@ -58,6 +120,20 @@ public class BitBuffer
         {
             _data[i] = false;
         }
+    }
+
+    public string ToOneLine()
+    {
+        StringBuilder builder = new StringBuilder();
+        for (int y = Height - 1; y >= 0; y--)
+        {
+            for (int x = 0; x < Width; x++)
+            {
+                builder.Append(this[x, y] ? "1" : "0");
+            }
+        }
+
+        return builder.ToString();
     }
 
     public override string ToString()

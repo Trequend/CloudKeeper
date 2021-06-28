@@ -1,12 +1,13 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 
 public class DatasetElement
 {
-    private int _id;
-    public int Id => _id;
+    [JsonProperty("Id")] private int _id;
+    [JsonIgnore] public int Id => _id;
 
-    private string _pattern;
-    public string Pattern => _pattern;
+    [JsonProperty("Pattern")] private string _pattern;
+    [JsonIgnore] public string Pattern => _pattern;
 
     public DatasetElement(int id, string pattern)
     {

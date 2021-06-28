@@ -6,13 +6,30 @@ using UnityEngine;
 public class Dataset
 {
     [SerializeField] [JsonProperty("DatabaseId")] private string _databaseId;
-    public string DatabaseId => _databaseId;
+    [JsonIgnore] public string DatabaseId => _databaseId;
 
     [SerializeField] [JsonProperty("Elements")] private List<DatasetElement> _elements = new List<DatasetElement>();
-    public List<DatasetElement> Elements => _elements;
+    [JsonIgnore] public List<DatasetElement> Elements => _elements;
+
+    [JsonConstructor]
+    private Dataset()
+    {
+        // For deserialization
+    }
 
     public Dataset(FigureDatabase database)
     {
         _databaseId = database.Id;
+    }
+
+    public static Dataset CopyForDatabase(FigureDatabase database, Dataset dataset)
+    {
+        Dataset copy = new Dataset(database);
+        foreach (DatasetElement element in dataset.Elements)
+        {
+            copy.Elements.Add(element);
+        }
+
+        return copy;
     }
 }
