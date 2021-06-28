@@ -1,5 +1,4 @@
-﻿using UnityEditor;
-using UnityEngine;
+﻿using UnityEngine;
 
 [CreateAssetMenu(fileName = "FigureDatabase", menuName = "Databases/FigureDatabase")]
 public class FigureDatabase : ScriptableObject
