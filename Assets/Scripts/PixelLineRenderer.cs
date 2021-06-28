@@ -107,7 +107,7 @@ public class PixelLineRenderer : Graphic
             Color32 clearColor = new Color32(0, 0, 0, 0);
             for (int y = 0; y < _texture.height; y++)
             {
-                int offset = y * _texture.height;
+                int offset = y * _texture.width;
                 for (int x = 0; x < _texture.width; x++)
                 {
                     _clearArray[offset + x] = clearColor;
