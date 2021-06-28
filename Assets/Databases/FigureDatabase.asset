@@ -12,9 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2bdff99201ef23408eb40619bc7c6ef, type: 3}
   m_Name: FigureDatabase
   m_EditorClassIdentifier: 
-  _id: 81451d35dc2b68940829147bf7ac58c8
+  _id: 4c200220a2fd24e4e9379ab72801e496
   _figures:
-  - _sprite: {fileID: 6934013284892070054, guid: 566631f0d9b683f42acf1d1114cb3044, type: 3}
-    _color: {r: 0, g: 0, b: 0, a: 0}
-  - _sprite: {fileID: -7957278214813060823, guid: 566631f0d9b683f42acf1d1114cb3044, type: 3}
-    _color: {r: 0, g: 0, b: 0, a: 0}
+  - _name: VerticalLine
+    _sprite: {fileID: 21300000, guid: 5c7d8e5b9154801418fd4f673cd39fea, type: 3}
+    _color: {r: 0.20571373, g: 0.8584906, b: 0.21339351, a: 1}
+  - _name: HorizontalLine
+    _sprite: {fileID: 21300000, guid: e0722fa66a685664a88a61c234a9bc8d, type: 3}
+    _color: {r: 0.9056604, g: 0.8641283, b: 0.27682447, a: 1}
+  - _name: Phi
+    _sprite: {fileID: 21300000, guid: 789ab48cde1f4b94fb2f3774a8624cf4, type: 3}
+    _color: {r: 0.8396226, g: 0.12990382, b: 0.6449663, a: 1}
+  - _name: Delta
+    _sprite: {fileID: 21300000, guid: 16991e6e7b447a743983bd1cbcdb599a, type: 3}
+    _color: {r: 0.19337837, g: 0.4202103, b: 0.9150943, a: 1}
+  - _name: Epsilon
+    _sprite: {fileID: 21300000, guid: f0f58c313b948574cacc6f4159fa4439, type: 3}
+    _color: {r: 0.39446422, g: 0.7830189, b: 0.51476294, a: 1}
