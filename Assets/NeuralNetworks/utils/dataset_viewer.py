@@ -8,6 +8,10 @@ def view_dataset(path, id_to_name):
 	elements = dataset['elements']
 	elements_count = len(elements)
 
+	if elements_count == 0:
+		print('Dataset is empty')
+		return
+
 	def parse_entry(index):
 		element = elements[index]
 		name = id_to_name[element['id']]
