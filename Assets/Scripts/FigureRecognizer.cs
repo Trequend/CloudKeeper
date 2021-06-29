@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Barracuda;
+using UnityEngine;
 
 public class FigureRecognizer
 {
@@ -13,7 +14,15 @@ public class FigureRecognizer
 
     private readonly Tensor _input = new Tensor(n: 1, c: 32 * 32);
 
-    public FigureRecognizer(IEnumerable<FigureDatabase> databases)
+    private float _threshold;
+
+    public float Threshold
+    {
+        get => _threshold;
+        set => _threshold = Mathf.Clamp(value, 0.01f, 0.99f);
+    }
+
+    public FigureRecognizer(IEnumerable<FigureDatabase> databases, float threshold = 0.75f)
     {
         if (databases == null)
         {
@@ -41,9 +50,16 @@ public class FigureRecognizer
             Model model = ModelLoader.Load(neuralNetworks[i]);
             _workers[i] = WorkerFactory.CreateWorker(WorkerFactory.Type.CSharpRef, model);
         }
+
+        Threshold = _threshold;
     }
 
     public Figure Recognize(BitBuffer figureBuffer)
+    {
+        return Recognize(figureBuffer, out _);
+    }
+
+    public Figure Recognize(BitBuffer figureBuffer, out int index)
     {
         figureBuffer.CopyTo(_buffer);
         for (int i = 0; i < _buffer.Length; i++)
@@ -58,13 +74,15 @@ public class FigureRecognizer
             float[] result = output.AsFloats();
             for (int figureIndex = 0; figureIndex < result.Length; figureIndex++)
             {
-                if (result[figureIndex] > 0.75f)
+                if (result[figureIndex] > _threshold)
                 {
+                    index = figureIndex;
                     return _databases[databaseIndex].GetFigure(figureIndex);
                 }
             }
         }
 
+        index = -1;
         return null;
     }
 

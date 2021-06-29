@@ -45,6 +45,10 @@ public class DatasetGenerator : EditorWindow
 
     private BitBuffer _figureBuffer = new BitBuffer(32, 32);
 
+    private FigureRecognizer _recognizer;
+
+    private bool _useRecognizer;
+
     private void Awake()
     {
         _texture = new Texture2D(1, 1)
@@ -102,12 +106,24 @@ public class DatasetGenerator : EditorWindow
 
     private void SetDatabase(FigureDatabase database)
     {
+        _useRecognizer = false;
+        if (_database != null && _recognizer != null)
+        {
+            _recognizer.Destroy();
+            _recognizer = null;
+        }
+
         _dataset = null;
         _datasetPath = string.Empty;
         _database = database;
         if (database == null)
         {
             return;
+        }
+
+        if (_database.LoadNeuralNetwork() != null)
+        {
+            _recognizer = new FigureRecognizer(new FigureDatabase[] { _database });
         }
 
         int count = _database.GetFiguresCount();
@@ -283,6 +299,15 @@ public class DatasetGenerator : EditorWindow
             typeof(Pen),
             allowSceneObjects: false
         ) as Pen;
+
+        if (_recognizer == null)
+        {
+            return;
+        }
+
+        _useRecognizer = EditorGUILayout.BeginToggleGroup("Recognizer", _useRecognizer);
+        _recognizer.Threshold = EditorGUILayout.FloatField("Threshold", _recognizer.Threshold);
+        EditorGUILayout.EndToggleGroup();
     }
 
     private void FigureSelector()
@@ -425,21 +450,37 @@ public class DatasetGenerator : EditorWindow
     private void EndDrawing()
     {
         _drawInputCollecting = false;
-        _figureBuffer.LineLoop(_bufferPen, _points);
-        _dataset.Elements.Add(new DatasetElement(
-            _selectedFigureIndex.Value,
-            _figureBuffer.ToOneLine()
-        ));
-
-        Debug.Log(_figureBuffer.ToString());
+        ProcessFigure();
         _points.Clear();
         _figureBuffer.Clear();
-        _countInDataset[_selectedFigureIndex.Value]++;
         ClearTexture();
         if (Event.current.type != EventType.Repaint)
         {
             Repaint();
         }
+    }
+
+    private void ProcessFigure()
+    {
+        _figureBuffer.LineLoop(_bufferPen, _points);
+        if (_useRecognizer)
+        {
+            Figure figure = _recognizer.Recognize(_figureBuffer, out int figureIndex);
+            if (figure != null && figureIndex == _selectedFigureIndex.Value)
+            {
+                return;
+            }
+            else
+            {
+                Debug.Log("New element");
+            }
+        }
+
+        _countInDataset[_selectedFigureIndex.Value]++;
+        _dataset.Elements.Add(new DatasetElement(
+            _selectedFigureIndex.Value,
+            _figureBuffer.ToOneLine()
+        ));
     }
 
     private void ResizeTexture(int width, int height)
