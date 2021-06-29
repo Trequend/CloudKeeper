@@ -170,7 +170,8 @@ public class DatasetGenerator : EditorWindow
             }
             else
             {
-                EditorGUILayout.LabelField(new GUIContent($"Dataset path: {_datasetPath}", _datasetPath));
+                EditorGUILayout.PrefixLabel("Dataset path");
+                EditorGUILayout.LabelField(new GUIContent(_datasetPath, _datasetPath));
                 if (GUILayout.Button("Save as", GUILayout.MaxWidth(60.0f)))
                 {
                     SaveDatasetAs();
