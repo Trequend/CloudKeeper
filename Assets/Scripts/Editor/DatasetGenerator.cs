@@ -5,7 +5,6 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 public class DatasetGenerator : EditorWindow
 {
@@ -424,23 +423,25 @@ public class DatasetGenerator : EditorWindow
 
     private void CollectDrawInput(in Rect drawZone)
     {
+        Vector2Int point = MousePositionToTexture(drawZone);
         switch (Event.current.type)
         {
             case EventType.MouseDown:
-                StartDrawing();
+                if (_textureRect.Contains(point))
+                {
+                    StartDrawing();
+                }
                 break;
             case EventType.MouseUp:
-                EndDrawing();
+                if (_drawInputCollecting)
+                {
+                    EndDrawing();
+                }
                 break;
         }
 
         if (_drawInputCollecting)
         {
-            Vector2 mousePosition = Event.current.mousePosition;
-            Vector2Int point = new Vector2Int((int)mousePosition.x, (int)mousePosition.y);
-            point.x -= (int)drawZone.position.x;
-            point.y -= (int)drawZone.position.y;
-            point.y = (int)drawZone.height - point.y;
             if (!_textureRect.Contains(point))
             {
                 return;
@@ -449,26 +450,33 @@ public class DatasetGenerator : EditorWindow
             if (_points.Count == 0)
             {
                 _editorPen.DrawDot(point, _texture.SetPixel, Color.black, _textureRect);
-                _points.Add(point);
-                _texture.Apply();
-                if (Event.current.type != EventType.Repaint)
-                {
-                    Repaint();
-                }
             }
-            else if (_points.Last() != point)
+            else if (_points.Last() == point)
+            {
+                return;
+            }
+            else
             {
                 _editorPen.DrawLine(_points.Last(), point, _texture.SetPixel, Color.black, _textureRect);
-                _points.Add(point);
-                _texture.Apply();
-                if (Event.current.type != EventType.Repaint)
-                {
-                    Repaint();
-                }
             }
 
-            
+            _points.Add(point);
+            _texture.Apply();
+            if (Event.current.type != EventType.Repaint)
+            {
+                Repaint();
+            }
         }
+    }
+
+    private Vector2Int MousePositionToTexture(in Rect drawZone)
+    {
+        Vector2 mousePosition = Event.current.mousePosition;
+        Vector2Int point = new Vector2Int((int)mousePosition.x, (int)mousePosition.y);
+        point.x -= (int)drawZone.position.x;
+        point.y -= (int)drawZone.position.y;
+        point.y = (int)drawZone.height - point.y;
+        return point;
     }
 
     private void StartDrawing()
