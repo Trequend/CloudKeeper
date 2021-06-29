@@ -491,14 +491,16 @@ public class DatasetGenerator : EditorWindow
         _points.Clear();
         _figureBuffer.Clear();
         ClearTexture();
-        if (Event.current.type != EventType.Repaint)
-        {
-            Repaint();
-        }
+        Repaint();
     }
 
     private void ProcessFigure()
     {
+        if (_points.Count < 2)
+        {
+            return;
+        }
+
         _figureBuffer.LineLoop(_bufferPen, _points);
         if (_useRecognizer)
         {
