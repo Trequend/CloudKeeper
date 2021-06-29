@@ -7,11 +7,16 @@ using UnityEngine.EventSystems;
 public class FigureReader : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 {
     [SerializeField] private PixelLineRenderer _renderer;
+
     [SerializeField] private Pen _bitBufferPen;
+
+    [SerializeField] private FigureDatabase[] _figureDatabases;
 
     private readonly BitBuffer _figureBuffer = new BitBuffer(32, 32);
 
-    public delegate void FigureReadedEventHandler(BitBuffer figure);
+    private FigureRecognizer _recognizer;
+
+    public delegate void FigureReadedEventHandler(Figure figure);
 
     public event FigureReadedEventHandler _figureReaded;
     public event FigureReadedEventHandler FigureReaded
@@ -23,6 +28,16 @@ public class FigureReader : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     private readonly List<Vector2Int> _points = new List<Vector2Int>();
 
     private Coroutine _reading;
+
+    private void Start()
+    {
+        _recognizer = new FigureRecognizer(_figureDatabases);
+    }
+
+    private void OnDestroy()
+    {
+        _recognizer.Destroy();
+    }
 
     void IPointerDownHandler.OnPointerDown(PointerEventData eventData)
     {
@@ -57,9 +72,18 @@ public class FigureReader : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
         _reading = null;
         _renderer.Clear();
         ProcessPoints();
-        System.IO.File.WriteAllText("test.txt", _figureBuffer.ToString());
+        Figure figure = _recognizer.Recognize(_figureBuffer);
+        _figureReaded?.Invoke(figure);
+        if (figure == null)
+        {
+            Debug.Log("Unknown");
+        }
+        else
+        {
+            Debug.Log(figure.Name);
+        }
+        
         _figureBuffer.Clear();
-        // Recoginze figure
     }
 
     private void ProcessPoints()

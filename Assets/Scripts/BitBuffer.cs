@@ -122,6 +122,23 @@ public class BitBuffer
         }
     }
 
+    public void CopyTo(float[] buffer)
+    {
+        if (buffer.Length != Width * Height)
+        {
+            throw new ArgumentException(nameof(buffer));
+        }
+
+        for (int y = Height - 1; y >= 0; y--)
+        {
+            int offset = y * Width;
+            for (int x = 0; x < Width; x++)
+            {
+                buffer[offset + x] = _data[offset + x] ? 1.0f : 0.0f;
+            }
+        }
+    }
+
     public string ToOneLine()
     {
         StringBuilder builder = new StringBuilder();

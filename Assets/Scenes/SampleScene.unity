@@ -1068,6 +1068,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _renderer: {fileID: 1440857545}
   _bitBufferPen: {fileID: 11400000, guid: 99b00589c157e7341ba3400298147a80, type: 2}
+  _figureDatabases:
+  - {fileID: 11400000, guid: 2f7056edd9446b446943d64c3e8ad68f, type: 2}
 --- !u!114 &1574508433
 MonoBehaviour:
   m_ObjectHideFlags: 0

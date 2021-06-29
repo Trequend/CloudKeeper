@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Unity.Barracuda;
+using UnityEngine;
 
 [CreateAssetMenu(fileName = "FigureDatabase", menuName = "Databases/FigureDatabase")]
 public class FigureDatabase : ScriptableObject
@@ -16,5 +17,10 @@ public class FigureDatabase : ScriptableObject
     public Figure GetFigure(int index)
     {
         return _figures[index];
+    }
+
+    public NNModel LoadNeuralNetwork()
+    {
+        return Resources.Load<NNModel>($"NeuralNetworks/{Id}");
     }
 }
