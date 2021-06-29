@@ -20,7 +20,15 @@ public class DatasetGenerator : EditorWindow
 
     private Dataset _dataset;
 
-    private string _datasetPath = string.Empty;
+    private string _datasetPath;
+
+    private bool DatasetHasUnsavedChanged
+    {
+        get => hasUnsavedChanges;
+        set => hasUnsavedChanges = value;
+    }
+
+    private bool _datasetHasIrrevocableChanges;
 
     private string[] _figureNames;
 
@@ -59,6 +67,8 @@ public class DatasetGenerator : EditorWindow
     private float[] _angles = new float[] { 15.0f, -15.0f };
 
     private readonly Stack<int> _figureAddingHistory = new Stack<int>();
+
+    private int _figureAddedAfterSave;
 
     private void Awake()
     {
@@ -100,6 +110,12 @@ public class DatasetGenerator : EditorWindow
         }
     }
 
+    public override void SaveChanges()
+    {
+        base.SaveChanges();
+        SaveDataset();
+    }
+
     private void DatabaseEditor()
     {
         FigureDatabase database = (FigureDatabase)EditorGUILayout.ObjectField(
@@ -124,8 +140,7 @@ public class DatasetGenerator : EditorWindow
             _recognizer = null;
         }
 
-        _dataset = null;
-        _datasetPath = string.Empty;
+        SetDataset(dataset: null, path: null);
         _database = database;
         if (database == null)
         {
@@ -162,29 +177,34 @@ public class DatasetGenerator : EditorWindow
             if (string.IsNullOrWhiteSpace(_datasetPath))
             {
                 EditorGUILayout.LabelField("No dataset");
-                if (GUILayout.Button("New", GUILayout.MaxWidth(45.0f)))
-                {
-                    CreateDataset();
-                }
             }
             else
             {
                 EditorGUILayout.PrefixLabel("Dataset path");
                 EditorGUILayout.LabelField(new GUIContent(_datasetPath, _datasetPath));
+
                 if (GUILayout.Button("Save as", GUILayout.MaxWidth(60.0f)))
                 {
                     SaveDatasetAs();
                 }
 
-                if (GUILayout.Button("Save", GUILayout.MaxWidth(45.0f)))
+                using (new EditorGUI.DisabledGroupScope(!DatasetHasUnsavedChanged))
                 {
-                    if (string.IsNullOrWhiteSpace(_datasetPath))
+                    if (GUILayout.Button("Save", GUILayout.MaxWidth(45.0f)))
                     {
-                        SaveDatasetAs();
-                    }
+                        if (string.IsNullOrWhiteSpace(_datasetPath))
+                        {
+                            SaveDatasetAs();
+                        }
 
-                    SaveDataset();
+                        SaveDataset();
+                    }
                 }
+            }
+
+            if (GUILayout.Button("New", GUILayout.MaxWidth(45.0f)))
+            {
+                CreateDataset();
             }
 
             if (GUILayout.Button("Load", GUILayout.MaxWidth(45.0f)))
@@ -202,8 +222,7 @@ public class DatasetGenerator : EditorWindow
             return;
         }
 
-        _datasetPath = path;
-        SetDataset(new Dataset(_database));
+        SetDataset(new Dataset(_database), path);
         SaveDataset();
     }
 
@@ -229,6 +248,9 @@ public class DatasetGenerator : EditorWindow
                 Formatting = Formatting.Indented
             };
             serializer.Serialize(writer, _dataset);
+            _figureAddedAfterSave = 0;
+            DatasetHasUnsavedChanged = false;
+            _datasetHasIrrevocableChanges = false;
         }
         catch (Exception exception)
         {
@@ -261,7 +283,7 @@ public class DatasetGenerator : EditorWindow
 
                 if (ok)
                 {
-                    SetDataset(Dataset.CopyForDatabase(_database, loadedDataset));
+                    SetDataset(Dataset.CopyForDatabase(_database, loadedDataset), path);
                 }
                 else
                 {
@@ -270,10 +292,8 @@ public class DatasetGenerator : EditorWindow
             }
             else
             {
-                SetDataset(loadedDataset);
+                SetDataset(loadedDataset, path);
             }
-
-            _datasetPath = path;
         }
         catch (Exception exception)
         {
@@ -281,9 +301,13 @@ public class DatasetGenerator : EditorWindow
         }
     }
 
-    private void SetDataset(Dataset dataset)
+    private void SetDataset(Dataset dataset, string path)
     {
         _dataset = dataset;
+        _datasetPath = path;
+        _figureAddedAfterSave = 0;
+        DatasetHasUnsavedChanged = false;
+        _datasetHasIrrevocableChanges = false;
         _figureAddingHistory.Clear();
     }
 
@@ -410,36 +434,15 @@ public class DatasetGenerator : EditorWindow
                 
                 GUILayout.FlexibleSpace();
 
-                using (new GUILayout.HorizontalScope())
+                EditorGUI.BeginDisabledGroup(_figureAddingHistory.Count == 0);
+
+                if (GUILayout.Button("Undo figure adding"))
                 {
-                    EditorGUI.BeginDisabledGroup(countInDataset == 0);
-
-                    if (GUILayout.Button("Remove last entry"))
-                    {
-                        RemoveLastEntry();
-                    }
-
-                    EditorGUI.EndDisabledGroup();
-
-                    EditorGUI.BeginDisabledGroup(_figureAddingHistory.Count == 0);
-
-                    if (GUILayout.Button("Undo figure adding"))
-                    {
-                        UndoFigureAdding();
-                    }
-
-                    EditorGUI.EndDisabledGroup();
+                    UndoFigureAdding();
                 }
-            }
-        }
-    }
 
-    private void RemoveLastEntry()
-    {
-        int index = _dataset.Elements.FindLastIndex(element => element.Id == _selectedFigureIndex.Value);
-        if (index >= 0)
-        {
-            _dataset.Elements.RemoveAt(index);
+                EditorGUI.EndDisabledGroup();
+            }
         }
     }
 
@@ -448,6 +451,20 @@ public class DatasetGenerator : EditorWindow
         if (_figureAddingHistory.Count == 0)
         {
             return;
+        }
+
+        if (_figureAddedAfterSave == 0)
+        {
+            DatasetHasUnsavedChanged = true;
+            _datasetHasIrrevocableChanges = true;
+        }
+        else
+        {
+            _figureAddedAfterSave--;
+            if (!_datasetHasIrrevocableChanges)
+            {
+                DatasetHasUnsavedChanged = _figureAddedAfterSave != 0;
+            }
         }
 
         int elementCount = _figureAddingHistory.Pop();
@@ -631,6 +648,9 @@ public class DatasetGenerator : EditorWindow
 
     private void AddFigureInDataset()
     {
+        DatasetHasUnsavedChanged = true;
+        _figureAddedAfterSave++;
+        
         _dataset.Elements.Add(new DatasetElement(
             _selectedFigureIndex.Value,
             _figureBuffer.ToOneLine()
