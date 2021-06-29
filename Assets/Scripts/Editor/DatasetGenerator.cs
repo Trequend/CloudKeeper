@@ -48,7 +48,7 @@ public class DatasetGenerator : EditorWindow
 
     private BitBuffer _figureBuffer = new BitBuffer(32, 32);
 
-    private readonly float _toolsMaxHeight = 160.0f;
+    private readonly float _toolsMaxHeight = 165.0f;
 
     private Vector2 _toolsScrollPosition;
 
@@ -58,7 +58,7 @@ public class DatasetGenerator : EditorWindow
 
     private bool _useFigureRotator;
 
-    private float[] _angles = new float[0];
+    private float[] _angles = new float[] { 15.0f, -15.0f };
 
     private void Awake()
     {
@@ -349,24 +349,14 @@ public class DatasetGenerator : EditorWindow
         EditorGUI.indentLevel++;
         
         int length = EditorGUILayout.IntField("Angles count", _angles.Length);
-        if (length < _angles.Length)
+        if (length != _angles.Length)
         {
-            _angles = _angles.Take(length).ToArray();
-        }
-        else if (length > _angles.Length)
-        {
-            float[] angles = new float[length];
-            for (int i = 0; i < _angles.Length; i++)
-            {
-                angles[i] = _angles[i];
-            }
-
-            _angles = angles;
+            _angles = new float[length];
         }
 
         for (int i = 0; i < length; i++)
         {
-            EditorGUILayout.FloatField($"Angle {i}", _angles[i]);
+            _angles[i] = EditorGUILayout.FloatField($"Angle {i}", _angles[i]);
         }
 
         EditorGUI.indentLevel--;
