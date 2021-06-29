@@ -15,6 +15,8 @@ public class DatasetGenerator : EditorWindow
         GetWindow<DatasetGenerator>("Dataset generator");
     }
 
+    private readonly Color32 _clearColor = new Color32(204, 255, 254, 255);
+
     private FigureDatabase _database;
 
     private Dataset _dataset;
@@ -37,7 +39,7 @@ public class DatasetGenerator : EditorWindow
 
     private bool _drawInputCollecting;
 
-    private List<Vector2Int> _points = new List<Vector2Int>();
+    private readonly List<Vector2Int> _points = new List<Vector2Int>();
 
     private Pen _editorPen;
 
@@ -393,6 +395,33 @@ public class DatasetGenerator : EditorWindow
         GUI.DrawTexture(zoneRect, _texture);
     }
 
+    private void ResizeTexture(int width, int height)
+    {
+        _textureRect = new RectInt(0, 0, width, height);
+        _texture.Resize(width, height);
+        ClearTexture();
+    }
+
+    private void ClearTexture()
+    {
+        int size = _texture.width * _texture.height;
+        if (_clearArray == null || _clearArray.Length != size)
+        {
+            _clearArray = new Color32[size];
+            for (int y = 0; y < _texture.height; y++)
+            {
+                int offset = y * _texture.width;
+                for (int x = 0; x < _texture.width; x++)
+                {
+                    _clearArray[offset + x] = _clearColor;
+                }
+            }
+        }
+
+        _texture.SetPixels32(_clearArray);
+        _texture.Apply();
+    }
+
     private void CollectDrawInput(in Rect drawZone)
     {
         switch (Event.current.type)
@@ -481,33 +510,5 @@ public class DatasetGenerator : EditorWindow
             _selectedFigureIndex.Value,
             _figureBuffer.ToOneLine()
         ));
-    }
-
-    private void ResizeTexture(int width, int height)
-    {
-        _textureRect = new RectInt(0, 0, width, height);
-        _texture.Resize(width, height);
-        ClearTexture();
-    }
-
-    private void ClearTexture()
-    {
-        int size = _texture.width * _texture.height;
-        if (_clearArray == null || _clearArray.Length != size)
-        {
-            _clearArray = new Color32[size];
-            Color32 clearColor = new Color32(0, 255, 255, 255);
-            for (int y = 0; y < _texture.height; y++)
-            {
-                int offset = y * _texture.width;
-                for (int x = 0; x < _texture.width; x++)
-                {
-                    _clearArray[offset + x] = clearColor;
-                }
-            }
-        }
-
-        _texture.SetPixels32(_clearArray);
-        _texture.Apply();
     }
 }
