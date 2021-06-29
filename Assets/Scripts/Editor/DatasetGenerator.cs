@@ -24,8 +24,6 @@ public class DatasetGenerator : EditorWindow
 
     private string[] _figureNames;
 
-    private int[] _countInDataset;
-
     private int? _selectedFigureIndex;
 
     private readonly float _drawZonePadding = 10.0f;
@@ -59,6 +57,8 @@ public class DatasetGenerator : EditorWindow
     private bool _useFigureRotator;
 
     private float[] _angles = new float[] { 15.0f, -15.0f };
+
+    private readonly Stack<int> _figureAddingHistory = new Stack<int>();
 
     private void Awake()
     {
@@ -139,7 +139,6 @@ public class DatasetGenerator : EditorWindow
 
         int count = _database.GetFiguresCount();
         _figureNames = new string[count];
-        _countInDataset = new int[count];
         for (int i = 0; i < count; i++)
         {
             Figure figure = _database.GetFigure(i);
@@ -285,15 +284,7 @@ public class DatasetGenerator : EditorWindow
     private void SetDataset(Dataset dataset)
     {
         _dataset = dataset;
-        for (int i = 0; i < _countInDataset.Length; i++)
-        {
-            _countInDataset[i] = 0;
-        }
-
-        foreach (DatasetElement element in _dataset.Elements)
-        {
-            _countInDataset[element.Id]++;
-        }
+        _figureAddingHistory.Clear();
     }
 
     private void ToolsEditor()
@@ -413,18 +404,32 @@ public class DatasetGenerator : EditorWindow
             {
                 EditorGUILayout.LabelField($"Id: {_selectedFigureIndex.Value}");
                 EditorGUILayout.LabelField($"Name: {figure.Name}");
-                EditorGUILayout.LabelField($"Count in dataset: {_countInDataset[_selectedFigureIndex.Value]}");
+
+                int countInDataset = _dataset.Elements.Count(element => element.Id == _selectedFigureIndex.Value);
+                EditorGUILayout.LabelField($"Count in dataset: {countInDataset}");
+                
                 GUILayout.FlexibleSpace();
 
-                bool disabled = _countInDataset[_selectedFigureIndex.Value] == 0;
-                EditorGUI.BeginDisabledGroup(disabled);
-
-                if (GUILayout.Button("Remove last entry"))
+                using (new GUILayout.HorizontalScope())
                 {
-                    RemoveLastEntry();
-                }
+                    EditorGUI.BeginDisabledGroup(countInDataset == 0);
 
-                EditorGUI.EndDisabledGroup();
+                    if (GUILayout.Button("Remove last entry"))
+                    {
+                        RemoveLastEntry();
+                    }
+
+                    EditorGUI.EndDisabledGroup();
+
+                    EditorGUI.BeginDisabledGroup(_figureAddingHistory.Count == 0);
+
+                    if (GUILayout.Button("Undo figure adding"))
+                    {
+                        UndoFigureAdding();
+                    }
+
+                    EditorGUI.EndDisabledGroup();
+                }
             }
         }
     }
@@ -434,8 +439,21 @@ public class DatasetGenerator : EditorWindow
         int index = _dataset.Elements.FindLastIndex(element => element.Id == _selectedFigureIndex.Value);
         if (index >= 0)
         {
-            _countInDataset[_selectedFigureIndex.Value]--;
             _dataset.Elements.RemoveAt(index);
+        }
+    }
+
+    private void UndoFigureAdding()
+    {
+        if (_figureAddingHistory.Count == 0)
+        {
+            return;
+        }
+
+        int elementCount = _figureAddingHistory.Pop();
+        for (int i = 0; i < elementCount; i++)
+        {
+            _dataset.Elements.RemoveAt(_dataset.Elements.Count - 1);
         }
     }
 
@@ -589,6 +607,7 @@ public class DatasetGenerator : EditorWindow
             }
         }
 
+        int elementCount = 1;
         AddFigureInDataset();
         if (_useFigureRotator && _angles.Length != 0)
         {
@@ -597,13 +616,15 @@ public class DatasetGenerator : EditorWindow
                 _figureBuffer.Clear();
                 _figureBuffer.LineLoop(_bufferPen, rotatedPoints);
                 AddFigureInDataset();
+                elementCount++;
             }
         }
+
+        _figureAddingHistory.Push(elementCount);
     }
 
     private void AddFigureInDataset()
     {
-        _countInDataset[_selectedFigureIndex.Value]++;
         _dataset.Elements.Add(new DatasetElement(
             _selectedFigureIndex.Value,
             _figureBuffer.ToOneLine()
