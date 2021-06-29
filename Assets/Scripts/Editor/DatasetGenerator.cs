@@ -30,6 +30,8 @@ public class DatasetGenerator : EditorWindow
 
     private readonly float _drawZonePadding = 10.0f;
 
+    private readonly float _drawZoneThreshold = 5.0f;
+
     private RectInt _textureRect;
 
     private Texture2D _texture;
@@ -46,13 +48,21 @@ public class DatasetGenerator : EditorWindow
 
     private BitBuffer _figureBuffer = new BitBuffer(32, 32);
 
+    private readonly float _toolsMaxHeight = 160.0f;
+
+    private Vector2 _toolsScrollPosition;
+
     private FigureRecognizer _recognizer;
 
     private bool _useRecognizer;
 
+    private bool _useFigureRotator;
+
+    private float[] _angles = new float[0];
+
     private void Awake()
     {
-        _texture = new Texture2D(1, 1)
+        _texture = new Texture2D(1, 1, TextureFormat.RGBA32, false)
         {
             filterMode = FilterMode.Point,
             hideFlags = HideFlags.HideAndDontSave,
@@ -287,6 +297,20 @@ public class DatasetGenerator : EditorWindow
 
     private void ToolsEditor()
     {
+        EditorGUILayout.LabelField("Tools");
+        float scrollHeight = Mathf.Clamp(0.3f * position.height, 0.0f, _toolsMaxHeight);
+        var scrollView = new EditorGUILayout.ScrollViewScope(_toolsScrollPosition, GUILayout.Height(scrollHeight));
+        using (scrollView)
+        {
+            _toolsScrollPosition = scrollView.scrollPosition;
+            PensEditor();
+            RecognizerEditor();
+            FigureRotatorEditor();
+        }
+    }
+
+    private void PensEditor()
+    {
         _editorPen = EditorGUILayout.ObjectField(
             new GUIContent("Editor pen"),
             _editorPen,
@@ -300,14 +324,51 @@ public class DatasetGenerator : EditorWindow
             typeof(Pen),
             allowSceneObjects: false
         ) as Pen;
+    }
 
+    private void RecognizerEditor()
+    {
         if (_recognizer == null)
         {
             return;
         }
 
         _useRecognizer = EditorGUILayout.BeginToggleGroup("Recognizer", _useRecognizer);
+        EditorGUI.indentLevel++;
+
         _recognizer.Threshold = EditorGUILayout.FloatField("Threshold", _recognizer.Threshold);
+
+        EditorGUI.indentLevel--;
+        EditorGUILayout.EndToggleGroup();
+    }
+
+    private void FigureRotatorEditor()
+    {
+        _useFigureRotator = EditorGUILayout.BeginToggleGroup("Figure rotator", _useFigureRotator);
+        EditorGUI.indentLevel++;
+        
+        int length = EditorGUILayout.IntField("Angles count", _angles.Length);
+        if (length < _angles.Length)
+        {
+            _angles = _angles.Take(length).ToArray();
+        }
+        else if (length > _angles.Length)
+        {
+            float[] angles = new float[length];
+            for (int i = 0; i < _angles.Length; i++)
+            {
+                angles[i] = _angles[i];
+            }
+
+            _angles = angles;
+        }
+
+        for (int i = 0; i < length; i++)
+        {
+            EditorGUILayout.FloatField($"Angle {i}", _angles[i]);
+        }
+
+        EditorGUI.indentLevel--;
         EditorGUILayout.EndToggleGroup();
     }
 
@@ -381,6 +442,11 @@ public class DatasetGenerator : EditorWindow
             position.width,
             position.height - offset.y
         );
+
+        if (zoneRect.height <= _drawZoneThreshold)
+        {
+            return;
+        }
 
         if (Event.current.type == EventType.Repaint)
         {
@@ -509,12 +575,22 @@ public class DatasetGenerator : EditorWindow
             {
                 return;
             }
-            else
-            {
-                Debug.Log("New element");
-            }
         }
 
+        AddFigureInDataset();
+        if (_useFigureRotator && _angles.Length != 0)
+        {
+            foreach (List<Vector2Int> rotatedPoints in FigureRotator.Rotations(_points, _angles))
+            {
+                _figureBuffer.Clear();
+                _figureBuffer.LineLoop(_bufferPen, rotatedPoints);
+                AddFigureInDataset();
+            }
+        }
+    }
+
+    private void AddFigureInDataset()
+    {
         _countInDataset[_selectedFigureIndex.Value]++;
         _dataset.Elements.Add(new DatasetElement(
             _selectedFigureIndex.Value,
