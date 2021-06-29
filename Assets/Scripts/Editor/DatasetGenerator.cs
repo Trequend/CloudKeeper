@@ -216,7 +216,7 @@ public class DatasetGenerator : EditorWindow
 
     private void CreateDataset()
     {
-        string path = EditorUtility.SaveFilePanel("Save dataset", Application.dataPath, "Dataset", "json");
+        string path = EditorUtility.SaveFilePanel("Save dataset", Application.dataPath, "Dataset", "dataset");
         if (string.IsNullOrWhiteSpace(path))
         {
             return;
@@ -228,7 +228,7 @@ public class DatasetGenerator : EditorWindow
 
     private void SaveDatasetAs()
     {
-        string path = EditorUtility.SaveFilePanel("Save dataset", Application.dataPath, "Dataset", "json");
+        string path = EditorUtility.SaveFilePanel("Save dataset", Application.dataPath, "Dataset", "dataset");
         if (string.IsNullOrWhiteSpace(path))
         {
             return;
@@ -242,12 +242,7 @@ public class DatasetGenerator : EditorWindow
     {
         try
         {
-            using StreamWriter writer = File.CreateText(_datasetPath);
-            JsonSerializer serializer = new JsonSerializer()
-            {
-                Formatting = Formatting.Indented
-            };
-            serializer.Serialize(writer, _dataset);
+            Dataset.SaveToFile(_dataset, _datasetPath);
             _figureAddedAfterSave = 0;
             DatasetHasUnsavedChanged = false;
             _datasetHasIrrevocableChanges = false;
@@ -260,7 +255,7 @@ public class DatasetGenerator : EditorWindow
 
     private void LoadDataset()
     {
-        string path = EditorUtility.OpenFilePanel("Load dataset", Application.dataPath, "json");
+        string path = EditorUtility.OpenFilePanel("Load dataset", Application.dataPath, "dataset");
         if (string.IsNullOrWhiteSpace(path))
         {
             return;
@@ -268,10 +263,7 @@ public class DatasetGenerator : EditorWindow
 
         try
         {
-            using StreamReader reader = File.OpenText(path);
-            using JsonTextReader jsonReader = new JsonTextReader(reader);
-            JsonSerializer serializer = new JsonSerializer();
-            Dataset loadedDataset = serializer.Deserialize<Dataset>(jsonReader);
+            Dataset loadedDataset = Dataset.LoadFromFile(path);
             if (loadedDataset.DatabaseId != _database.Id)
             {
                 bool ok = EditorUtility.DisplayDialog(
