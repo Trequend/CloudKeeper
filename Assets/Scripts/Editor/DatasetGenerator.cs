@@ -44,7 +44,7 @@ public class DatasetGenerator : EditorWindow
 
     private Pen _bufferPen;
 
-    private BitBuffer _figureBuffer = new BitBuffer(32, 32);
+    private readonly BitBuffer _figureBuffer = new BitBuffer(32, 32);
 
     private readonly float _toolsMaxHeight = 165.0f;
 
@@ -459,6 +459,12 @@ public class DatasetGenerator : EditorWindow
 
     private void FigureDrawZone()
     {
+        if (_editorPen == null || _bufferPen == null)
+        {
+            EditorGUILayout.LabelField("No pen");
+            return;
+        }
+
         Rect lastRect = GUILayoutUtility.GetLastRect();
 
         Vector2 offset = new Vector2(
