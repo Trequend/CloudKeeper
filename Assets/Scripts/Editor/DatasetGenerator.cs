@@ -419,12 +419,33 @@ public class DatasetGenerator : EditorWindow
                 GUI.DrawTextureWithTexCoords(previewRect, figure.Sprite.texture, textureCoords);
             }
             
-            using (new GUILayout.VerticalScope())
+            using (new GUILayout.VerticalScope(GUILayout.Height(100.0f)))
             {
                 EditorGUILayout.LabelField($"Id: {_selectedFigureIndex.Value}");
                 EditorGUILayout.LabelField($"Name: {figure.Name}");
                 EditorGUILayout.LabelField($"Count in dataset: {_countInDataset[_selectedFigureIndex.Value]}");
+                GUILayout.FlexibleSpace();
+
+                bool disabled = _countInDataset[_selectedFigureIndex.Value] == 0;
+                EditorGUI.BeginDisabledGroup(disabled);
+
+                if (GUILayout.Button("Remove last entry"))
+                {
+                    RemoveLastEntry();
+                }
+
+                EditorGUI.EndDisabledGroup();
             }
+        }
+    }
+
+    private void RemoveLastEntry()
+    {
+        int index = _dataset.Elements.FindLastIndex(element => element.Id == _selectedFigureIndex.Value);
+        if (index >= 0)
+        {
+            _countInDataset[_selectedFigureIndex.Value]--;
+            _dataset.Elements.RemoveAt(index);
         }
     }
 
