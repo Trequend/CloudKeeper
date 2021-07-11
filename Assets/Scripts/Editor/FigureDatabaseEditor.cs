@@ -42,7 +42,7 @@ public class FigureDatabaseEditor : Editor
             $"{_propId.stringValue}.onnx"
         );
 
-        EditorGUILayout.LabelField($"Have neural network: {File.Exists(pathToNeuralNetwork)}");
+        EditorGUILayout.LabelField($"Has neural network: {File.Exists(pathToNeuralNetwork)}");
         EditorGUILayout.LabelField($"Figures count - {_propFigures.arraySize}");
     }
 
@@ -61,40 +61,49 @@ public class FigureDatabaseEditor : Editor
 
         for (int i = 0; i < _propFigures.arraySize; i++)
         {
-            SerializedProperty figure = _propFigures.GetArrayElementAtIndex(i);
-            FigureEditor(figure, ref i);
+            SerializedProperty propFigure = _propFigures.GetArrayElementAtIndex(i);
+            FigureEditor(propFigure, ref i);
         }
 
         serializedObject.ApplyModifiedProperties();
     }
 
-    private void FigureEditor(SerializedProperty figure, ref int index)
+    private void FigureEditor(SerializedProperty propFigure, ref int index)
     {
-        SerializedProperty propName = figure.FindPropertyRelative("_name");
-        SerializedProperty propSprite = figure.FindPropertyRelative("_sprite");
-        SerializedProperty propColor = figure.FindPropertyRelative("_color");
+        SerializedProperty propName = propFigure.FindPropertyRelative("_name");
+        SerializedProperty propSprite = propFigure.FindPropertyRelative("_sprite");
+        SerializedProperty propColor = propFigure.FindPropertyRelative("_color");
         EditorGUILayout.Space(10.0f);
 
         using (new EditorGUILayout.HorizontalScope())
         {
-            propSprite.objectReferenceValue = EditorGUI.ObjectField(
-                GUILayoutUtility.GetRect(100.0f, 100.0f, GUILayout.Width(100.0f), GUILayout.Height(100.0f)),
-                propSprite.objectReferenceValue,
-                typeof(Sprite),
-                allowSceneObjects: false
-            );
-
+            Rect spriteRect = GUILayoutUtility.GetRect(100.0f, 100.0f, GUILayout.Width(100.0f), GUILayout.Height(100.0f));
+            Figure figure = null;
             using (new EditorGUILayout.VerticalScope())
             {
                 EditorGUILayout.LabelField($"Id: {index}");
-                EditorGUILayout.PropertyField(propName, new GUIContent("Name"));
-                EditorGUILayout.PropertyField(propColor, new GUIContent("Color"));
+                EditorGUILayout.ObjectField(propFigure, new GUIContent("Asset"));
+                figure = propFigure.objectReferenceValue as Figure;
+                if (figure != null)
+                {
+                    EditorGUILayout.LabelField($"Name: {figure.Name}");
+                }
+                
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button("Remove"))
                 {
                     _propFigures.DeleteArrayElementAtIndex(index);
                     index--;
                 }
+            }
+
+            EditorGUI.DrawRect(spriteRect, Color.gray);
+            if (figure != null && figure.Sprite != null)
+            {
+                Color buffer = GUI.color;
+                GUI.color = figure.Color;
+                GUI.DrawTextureWithTexCoords(spriteRect, figure.Sprite.texture, figure.Sprite.GetTextureCoords());
+                GUI.color = buffer;
             }
         }
     }

@@ -39,4 +39,3 @@ def view_dataset(path, id_to_name):
 	
 	plt.tight_layout()
 	plt.show()
-

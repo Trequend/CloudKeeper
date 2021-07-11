@@ -5,36 +5,19 @@ using UnityEngine;
 public class PenEditor : Editor
 {
     private SerializedProperty _propThickness;
+
     private SerializedProperty _propTemplate;
 
     private Vector2 _scrollPosition = Vector2.zero;
 
-    private Texture2D _texture;
+    private Color _enabledCellColor = Color.gray;
+
+    private Color _disabledCellColor = new Color(0.3f, 0.3f, 0.3f);
 
     private void OnEnable()
     {
-        _texture = new Texture2D(10, 10, TextureFormat.RGBA32, false)
-        {
-            hideFlags = HideFlags.DontSave,
-        };
-
-        for (int i = 0; i < _texture.height; i++)
-        {
-            for (int j = 0; j < _texture.width; j++)
-            {
-                _texture.SetPixel(i, j, Color.white);
-            }
-        }
-        _texture.Apply();
-
         _propThickness = serializedObject.FindProperty("_thickness");
         _propTemplate = serializedObject.FindProperty("_template");
-    }
-
-    private void OnDisable()
-    {
-        DestroyImmediate(_texture);
-        _texture = null;
     }
 
     public override void OnInspectorGUI()
@@ -59,6 +42,7 @@ public class PenEditor : Editor
                 _propTemplate.GetArrayElementAtIndex(i).boolValue = true;
             }
         }
+
         serializedObject.ApplyModifiedPropertiesWithoutUndo();
     }
 
@@ -69,32 +53,46 @@ public class PenEditor : Editor
             fontStyle = FontStyle.Bold
         };
 
+        serializedObject.Update();
+        EditorGUILayout.Space();
+        GUILayout.Label("Template", boldTextSkin);
+        using (var scroll = new EditorGUILayout.ScrollViewScope(_scrollPosition))
+        {
+            _scrollPosition = scroll.scrollPosition;
+            TemplateEditor();
+        }
+
+        serializedObject.ApplyModifiedProperties();
+    }
+
+    private void TemplateEditor()
+    {
         GUIStyle cellSkin = new GUIStyle(GUI.skin.box)
         {
             padding = new RectOffset(5, 5, 5, 5),
             alignment = TextAnchor.MiddleCenter
         };
 
-        serializedObject.Update();
         int thickness = _propThickness.intValue;
-        EditorGUILayout.Space();
-        GUILayout.Label("Template", boldTextSkin);
-        _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
         for (int i = 0; i < thickness; i++)
         {
-            EditorGUILayout.BeginHorizontal();
-            for (int j = 0; j < thickness; j++)
+            using (new EditorGUILayout.HorizontalScope())
             {
-                SerializedProperty element = _propTemplate.GetArrayElementAtIndex(i * thickness + j);
-                Texture texture = element.boolValue ? _texture : null;
-                if (GUILayout.Button(texture, cellSkin, GUILayout.Width(20.0f), GUILayout.Height(20.0f)))
+                Color buffer = GUI.color;
+                for (int j = 0; j < thickness; j++)
                 {
-                    element.boolValue = !element.boolValue;
+                    SerializedProperty element = _propTemplate.GetArrayElementAtIndex(i * thickness + j);
+                    if (GUILayout.Button(string.Empty, cellSkin, GUILayout.Width(20.0f), GUILayout.Height(20.0f)))
+                    {
+                        element.boolValue = !element.boolValue;
+                    }
+
+                    Color color = element.boolValue ? _enabledCellColor : _disabledCellColor;
+                    EditorGUI.DrawRect(GUILayoutUtility.GetLastRect(), color);
                 }
+
+                GUI.color = buffer;
             }
-            EditorGUILayout.EndHorizontal();
         }
-        EditorGUILayout.EndScrollView();
-        serializedObject.ApplyModifiedProperties();
     }
 }

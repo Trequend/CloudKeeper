@@ -85,6 +85,10 @@ public class DatasetGenerator : EditorWindow
     private void OnDestroy()
     {
         DestroyImmediate(_texture);
+        if (_recognizer != null)
+        {
+            _recognizer.Dispose();
+        }
     }
 
     private void OnGUI()
@@ -136,7 +140,7 @@ public class DatasetGenerator : EditorWindow
         _useRecognizer = false;
         if (_database != null && _recognizer != null)
         {
-            _recognizer.Destroy();
+            _recognizer.Dispose();
             _recognizer = null;
         }
 
@@ -149,7 +153,7 @@ public class DatasetGenerator : EditorWindow
 
         if (_database.LoadNeuralNetwork() != null)
         {
-            _recognizer = new FigureRecognizer(new FigureDatabase[] { _database });
+            _recognizer = new FigureRecognizer(_database);
         }
 
         int count = _database.GetFiguresCount();
@@ -403,16 +407,7 @@ public class DatasetGenerator : EditorWindow
             if (figure.Sprite != null)
             {
                 Texture texture = figure.Sprite.texture;
-                Vector2 size = new Vector2(texture.width, texture.height);
-                Rect rect = figure.Sprite.rect;
-                Rect textureCoords = new Rect(
-                    rect.x / size.x,
-                    rect.y / size.y,
-                    rect.width / size.x,
-                    rect.height / size.y
-                );
-
-                
+                Rect textureCoords = figure.Sprite.GetTextureCoords();
                 GUI.DrawTextureWithTexCoords(previewRect, figure.Sprite.texture, textureCoords);
             }
             
