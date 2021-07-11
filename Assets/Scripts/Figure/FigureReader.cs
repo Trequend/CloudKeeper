@@ -33,31 +33,12 @@ public class FigureReader : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
     private Coroutine _cleanupRenderer;
 
-    private int _savedFrameRate;
-
     private void Start()
     {
         _recognizer = new FigureRecognizer(_figureDatabase);
 
         // The first recognition is slow. Do it at the beginning
         _recognizer.Recognize(_figureBuffer);
-    }
-
-    private void OnEnable()
-    {
-        return;
-#if UNITY_ANDROID && !UNITY_EDITOR
-        _savedFrameRate = Application.targetFrameRate;
-        Application.targetFrameRate = 60;
-#endif
-    }
-
-    private void OnDisable()
-    {
-        return;
-#if UNITY_ANDROID && !UNITY_EDITOR
-        Application.targetFrameRate = _savedFrameRate;
-#endif
     }
 
     private void OnDestroy()
@@ -75,7 +56,7 @@ public class FigureReader : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
     void IPointerUpHandler.OnPointerUp(PointerEventData eventData)
     {
-#if !UNITY_EDITOR
+#if UNITY_ANDROID
         if (Input.touches[0].phase != TouchPhase.Ended)
         {
             return;
@@ -104,10 +85,10 @@ public class FigureReader : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     {
         while (true)
         {
-#if UNITY_EDITOR
-            Vector3 inputPosition = Input.mousePosition;
-#else
+#if UNITY_ANDROID
             Vector3 inputPosition = Input.touches[0].position;
+#else
+            Vector3 inputPosition = Input.mousePosition;
 #endif
             Vector2Int position = new Vector2Int(
                 Mathf.RoundToInt(inputPosition.x),
@@ -149,9 +130,7 @@ public class FigureReader : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
         if (_bitBufferPen == null)
         {
             _points.Clear();
-#if UNITY_EDITOR
             Debug.LogWarning("No bit buffer pen");
-#endif
             return;
         }
 

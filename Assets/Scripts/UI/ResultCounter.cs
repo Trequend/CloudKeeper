@@ -31,8 +31,9 @@ public class ResultCounter : MonoBehaviour
         UpdateRecordText();
         HideNewRecordLabel();
         SetScore(0);
-        if (Score.Value == 0)
+        if (Score.Value < 5)
         {
+            SetResult();
             return;
         }
 

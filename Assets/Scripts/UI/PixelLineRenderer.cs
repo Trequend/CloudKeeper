@@ -34,9 +34,7 @@ public class PixelLineRenderer : Graphic
         base.Awake();
         if (_pen == null)
         {
-#if UNITY_EDITOR
-            Debug.LogWarning("No pen");
-#endif
+            Debug.LogError("No pen");
             return;
         }
 
