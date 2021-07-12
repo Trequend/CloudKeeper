@@ -593,8 +593,8 @@ RectTransform:
   m_Father: {fileID: 1895434402}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.0879823}
-  m_AnchorMax: {x: 1, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0.61557275}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -921,8 +921,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1101163089}
   m_HandleRect: {fileID: 1101163088}
   m_Direction: 0
-  m_Value: 1
-  m_Size: 1
+  m_Value: 0
+  m_Size: 0.9999999
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -1101,8 +1101,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -307.9018}
-  m_SizeDelta: {x: 0, y: 615.8036}
+  m_AnchoredPosition: {x: 0, y: -330}
+  m_SizeDelta: {x: 0, y: 660}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &903565070
 MonoBehaviour:
@@ -1171,6 +1171,8 @@ MonoBehaviour:
     vnitty
 
     LateNightCoffee
+
+    Willibab
 
 
     <b>UI
@@ -2385,8 +2387,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 416799305}
   m_HandleRect: {fileID: 416799304}
   m_Direction: 2
-  m_Value: 0.14963426
-  m_Size: 0.4120177
+  m_Value: 1
+  m_Size: 0.38442725
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

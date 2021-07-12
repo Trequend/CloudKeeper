@@ -64,6 +64,11 @@ public class Pause : MonoBehaviour
             return;
         }
 
+        if (!enabled)
+        {
+            return;
+        }
+
         _isShown = true;
         Time.timeScale = 0.0f;
         if (immediately)

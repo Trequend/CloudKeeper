@@ -56,7 +56,7 @@ public class FigureReader : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
     void IPointerUpHandler.OnPointerUp(PointerEventData eventData)
     {
-#if UNITY_ANDROID
+#if UNITY_ANDROID && !UNITY_EDITOR
         if (Input.touches[0].phase != TouchPhase.Ended)
         {
             return;
@@ -85,7 +85,7 @@ public class FigureReader : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     {
         while (true)
         {
-#if UNITY_ANDROID
+#if UNITY_ANDROID && !UNITY_EDITOR
             Vector3 inputPosition = Input.touches[0].position;
 #else
             Vector3 inputPosition = Input.mousePosition;
